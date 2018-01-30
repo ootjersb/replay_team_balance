@@ -76,21 +76,12 @@ def team_rating(teams, replay_team):
              'red team': mean(rating for rating, tier in teams[1 - replay_team])})
 
 
-def custom_get_tank(tankName, tank_info):
-    tier = tank_info.get(tankName, {}).get('tier') # first try exact match
-    # if that fails try endswith matching
-    if tier is not None:
-        return tier
-
-    for tank in tank_info:
-        if (tank.endswith(tankName)):
-            return tank_info.get(tank).get('tier')
-
-    # exclude Haloween tanks
-    if not (tankName=="F77_FCM_2C_HE2017" or tankName=="F80_FCM_F1_Mle1940_HE2017"):
-        # if that fails, output the missing tank info, so it can be added
-        print(f'Missing tank info: {tankName}')
-    return None
+def tank_tier(vehicle_type, tank_info):
+    tank_name = vehicle_type.split(':', 1)[1]
+    tier = tank_info.get(tank_name, {}).get('tier')
+    if not tier:
+        print(f'Missing tank info: {tank_name}')
+    return tier
 
 
 def team_average_ratings(replays, cache, tank_info=None):
@@ -102,15 +93,9 @@ def team_average_ratings(replays, cache, tank_info=None):
     for battle in replays:
         teams = [[], []]
         std = battle.get('std')
-        skipReplay = None
         for player in std.get('vehicles').values():
             name = player.get('name')
-            tank = player.get('vehicleType').split(':', 1)[1]
-            tier = custom_get_tank(tank, tank_info)
-            if tier is None and args.weighted:
-                skipReplay = True
-                break
-
+            tier = tank_tier(player.get('vehicleType'), tank_info)
             cached_player = cache.cached_record(name)
             if cached_player and cached_player.get('global_rating'):
                 rating = float(cached_player.get('global_rating'))
@@ -121,8 +106,6 @@ def team_average_ratings(replays, cache, tank_info=None):
                 else:
                     teams[team_num].append((rating, tier))
 
-        if skipReplay:
-            break
         func = weighted_team_rating if tank_info and args.weighted else team_rating
         team_ratings.append(func(teams, replay_team))
     return team_ratings
@@ -172,7 +155,7 @@ def output_rating_histogram(team_ratings):
                      'Histogram of team rating differences')
 
 
-def output_all_team_ratings(team_ratings):
+def output_team_ratings(team_ratings):
     data = [r for team_r in team_ratings for r in team_r.values()]
     output_histogram(data, int(min(data)), int(max(data)), 100,
                      'team average rating',
@@ -236,7 +219,7 @@ def team_averages(team_ratings):
           f'Percentage difference:\n\t\t\t{percent_diff(g, r):+.3}%')
 
 
-def output_all_player_ratings(cache):
+def output_player_ratings(cache):
     all_player_ratings = [int(player.get('global_rating')) for player in cache.data.values() if
                           int(player.get('global_rating')) > 100]
     output_histogram(all_player_ratings,
@@ -256,8 +239,8 @@ def outputs(replays, team_ratings, cache):
     output_rating_histogram(team_ratings)
     output_score_histogram(replays)
     output_pc_diff_per_battle(team_ratings)
-    output_all_team_ratings(team_ratings)
-    output_all_player_ratings(cache)
+    output_team_ratings(team_ratings)
+    output_player_ratings(cache)
 
 
 def main():

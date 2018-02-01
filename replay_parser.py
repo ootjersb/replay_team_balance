@@ -37,7 +37,8 @@ class ReplayParser:
             if (len(json_data.get('vehicles')) < 30 or               # not full team
                     json_data.get('regionCode') == 'CT' or           # test server
                     json_data.get('bootcampCtx') or                  # tutorial
-                    json_data.get('gameplayID') == 'sandbox'):       # proving grounds
+                    json_data.get('gameplayID') == 'sandbox' or      # proving grounds
+                    json_data.get('mapName') == '120_kharkiv_halloween'):       # Halloween 2017
                 return None
 
             if parts == 2:

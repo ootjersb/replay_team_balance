@@ -146,10 +146,10 @@ def outputs(replays, team_ratings):
     team_averages(team_ratings)
     ratings_cumulative = []
     ratings_step = []
-    for i in range(1000):
-        rating = output_expected_cumulative(team_ratings, i/10)
+    for i in range(50):
+        rating = output_expected_cumulative(team_ratings, i * 2)
         ratings_cumulative.append(rating)
-        rating_step = output_expected_step(team_ratings, i/10, i+1/10)
+        rating_step = output_expected_step(team_ratings, i * 2, (i + 1) * 2)
         ratings_step.append(rating_step)
         if rating.get('countWithOutcome') < 100:
             break
